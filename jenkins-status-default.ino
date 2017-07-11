@@ -55,59 +55,31 @@ void setup() {
 }
 
 void loop() {
-  trunkStatus = lastCompleted(url1, trunkG, trunkY, trunkR);
-  if(trunkBuilding) {
-    digitalWrite(trunkY, LOW);
-    delay(50);
-    digitalWrite(trunkY, HIGH);
-  } else {
-    digitalWrite(trunkY, HIGH);
-    delay(50);
-    digitalWrite(trunkY, LOW);
-  }
-  trunkBuilding = isBuilding(url1);
-
-  if(trunkStatus == SUCCESS) {
-    digitalWrite(trunkR, LOW);
-    digitalWrite(trunkG, HIGH);
-  } else {
-    digitalWrite(trunkG, LOW);
-    digitalWrite(trunkR, HIGH);
-  }
-
-   if(trunkBuilding) {
-    digitalWrite(trunkY, HIGH);
-  } else {
-    digitalWrite(trunkY, LOW);
-  }
-
-  releaseStatus = lastCompleted(url2, releaseG, releaseY, releaseR);
-  if(releaseBuilding) {
-    digitalWrite(releaseY, LOW);
-    delay(50);
-    digitalWrite(releaseY, HIGH);
-  } else {
-    digitalWrite(releaseY, HIGH);
-    delay(50);
-    digitalWrite(releaseY, LOW);
-  }
-  releaseBuilding = isBuilding(url2);
-
-  if(releaseStatus == SUCCESS) {
-    digitalWrite(releaseR, LOW);
-    digitalWrite(releaseG, HIGH);
-  } else {
-    digitalWrite(releaseG, LOW);
-    digitalWrite(releaseR, HIGH);
-  }
- 
-  if(releaseBuilding) {
-    digitalWrite(releaseY, HIGH);
-  } else {
-    digitalWrite(releaseY, LOW);
-  }
   
-  delay(20000);
+  blinkYellow(trunkBuilding, trunkY);
+  
+  trunkStatus = lastCompleted(url1, trunkG, trunkY, trunkR);
+  setResult(trunkStatus, trunkR, trunkG);
+
+  blinkYellow(trunkBuilding, trunkY);
+  
+  trunkBuilding = isBuilding(url1);
+  setBuilding(trunkBuilding, trunkY);
+
+
+  delay(10000);
+
+  blinkYellow(releaseBuilding, releaseY);
+  
+  releaseStatus = lastCompleted(url2, releaseG, releaseY, releaseR);
+  setResult(releaseStatus, releaseR, releaseG);
+  
+  blinkYellow(releaseBuilding, releaseY);
+  
+  releaseBuilding = isBuilding(url2);
+  setBuilding(releaseBuilding, releaseY);
+  
+  delay(10000);
 }
 
 boolean lastCompleted(String url, int ledG, int ledY, int ledR) {
@@ -136,7 +108,7 @@ boolean lastCompleted(String url, int ledG, int ledY, int ledR) {
   client.print(String("GET ") + url + "/lastCompletedBuild/api/json?tree=result HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" +
                "User-Agent: BuildFailureDetectorESP8266\r\n" +
-               "Authorization: Basic " + token + "\r\n" +
+               "Authorization: " + token + "\r\n" +
                "Connection: close\r\n\r\n");
 
   Serial.println("request sent");
@@ -157,7 +129,11 @@ boolean lastCompleted(String url, int ledG, int ledY, int ledR) {
   if (line.indexOf("\"result\":\"SUCCESS\"") >= 0 ) {
     return SUCCESS;
   } else {
+  if (line.indexOf("\"result\":\"FAILURE\"") >= 0 ) {
     return FAILURE;
+  } else {
+    return UNDEFINED;
+  }
   }
 
 }
@@ -186,7 +162,7 @@ boolean isBuilding(String url) {
   client.print(String("GET ") + url + "/lastBuild/api/json?tree=building HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" +
                "User-Agent: BuildFailureDetectorESP8266\r\n" +
-               "Authorization: Basic " + token + "\r\n" +
+               "Authorization: " + token + "\r\n" +
                "Connection: close\r\n\r\n");
 
   Serial.println("request sent");
@@ -210,6 +186,43 @@ boolean isBuilding(String url) {
   Serial.println("==========");
   Serial.println("closing connection");
   return building;
+}
+
+void setResult(int result, int rPin, int gPin) {
+  if(result == SUCCESS) {
+    digitalWrite(rPin, LOW);
+    digitalWrite(gPin, HIGH);
+  } else {
+    if(result == FAILURE) {
+      digitalWrite(gPin, LOW);
+      digitalWrite(rPin, HIGH);
+    } else {
+      digitalWrite(gPin, LOW);
+      digitalWrite(rPin, LOW);
+    }
+  }
+}
+
+void setBuilding(int result, int yPin) {
+   if(result) {
+    digitalWrite(yPin, HIGH);
+  } else {
+    digitalWrite(yPin, LOW);
+  }
+}
+
+void blinkYellow(int result, int yPin) {
+  if(result) {
+    digitalWrite(yPin, LOW);
+    delay(50);
+    digitalWrite(yPin, HIGH);
+    delay(50);
+  } else {
+    digitalWrite(yPin, HIGH);
+    delay(50);
+    digitalWrite(yPin, LOW);
+    delay(50);
+  }
 }
 
 
