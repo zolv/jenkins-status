@@ -1,11 +1,12 @@
-
 #include <Arduino.h>
 
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 
-const char* ssid = "SSID";
-const char* password = "PASSWORD";
+const char* ssid1 = "SSID-1";
+const char* password1 = "PASSWORD-1";
+const char* ssid2 = "SSID-2";
+const char* password2 = "PASSWORD-2";
 
 #define trunkR D2
 #define trunkY D3
@@ -15,12 +16,12 @@ const char* password = "PASSWORD";
 #define releaseY D6
 #define releaseG D7
 
-const char* host = "your.host.com";
+const char* host = "YOUR-JENKINS-HOST.com";
 const int httpsPort = 443;
-String token = "TOKEN_TOKEN_TOKEN";
+String token = "Basic VVNFUl9OQU1FOkFQSV9UT0tFTg==";
 
-String url1 =  "/job/NAME-OF-YOUR-JOB-1";
-String url2 =  "/job/NAME-OF-YOUR-JOB-2";
+String url1 =  "/job/YOUR-JOB-1";
+String url2 =  "/job/YOUR-JOB-2";
 
 #define SUCCESS 2
 #define FAILURE 1
@@ -35,9 +36,10 @@ void setup() {
   Serial.begin(9600);
   Serial.println();
   Serial.print("connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-
+  Serial.println(ssid1);
+  
+  wifiConnect();
+  
   pinMode(trunkR, OUTPUT);
   pinMode(trunkY, OUTPUT);
   pinMode(trunkG, OUTPUT);
@@ -83,15 +85,7 @@ void loop() {
 }
 
 boolean lastCompleted(String url, int ledG, int ledY, int ledR) {
-   while (WiFi.status() != WL_CONNECTED) {
-    delay(5000);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+ wifiConnect();
 
   // Use WiFiClientSecure class to create TLS connection
   WiFiClientSecure client;
@@ -139,15 +133,8 @@ boolean lastCompleted(String url, int ledG, int ledY, int ledR) {
 }
 
 boolean isBuilding(String url) {
-   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
+  wifiConnect();
+  
   // Use WiFiClientSecure class to create TLS connection
   WiFiClientSecure client;
   Serial.print("connecting to ");
@@ -225,4 +212,21 @@ void blinkYellow(int result, int yPin) {
   }
 }
 
+int tries = 0;
+
+void wifiConnect() {
+  while (WiFi.status() != WL_CONNECTED) {
+    tries++;
+    if(tries % 5 != 0 ) {
+    Serial.print("Connecting to ");Serial.println(ssid1);
+     WiFi.begin(ssid1, password1);
+    } else {
+      Serial.print("Connecting to ");Serial.println(ssid2);
+     WiFi.begin(ssid2, password2);
+    }
+    delay(5000);
+  }
+  tries = 0;
+  Serial.println(WiFi.localIP());
+}
 
