@@ -217,14 +217,14 @@ int tries = 0;
 void wifiConnect() {
   while (WiFi.status() != WL_CONNECTED) {
     tries++;
-    if(tries % 5 != 0 ) {
+    if(tries % 2 != 0 ) {
     Serial.print("Connecting to ");Serial.println(ssid1);
      WiFi.begin(ssid1, password1);
     } else {
       Serial.print("Connecting to ");Serial.println(ssid2);
      WiFi.begin(ssid2, password2);
     }
-    delay(5000);
+    delay(10000);
   }
   tries = 0;
   Serial.println(WiFi.localIP());
